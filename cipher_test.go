@@ -53,7 +53,7 @@ func TestDecipher(t *testing.T){
 }
 
 func TestDifferent1BitInKey(t *testing.T){
-  msg,key,nonce:=make([]byte,4),make([]byte,32),make([]byte,16)
+  msg,key,nonce:=make([]byte,2),make([]byte,32),make([]byte,16)
   rand.Read(msg)
   rand.Read(key)
   rand.Read(nonce)
