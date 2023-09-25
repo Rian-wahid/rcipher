@@ -11,10 +11,9 @@ type Cipher struct {
   hash hash.Hash
   keyGen *keyGenerator
   writer io.Writer
-  key []byte
-  nonce []byte
   p byte
   start bool
+  end bool
 }
 
 type Decipher struct{
@@ -34,6 +33,9 @@ func NewDecipher(key ,nonce []byte,w io.Writer)(*Decipher,error){
 }
 
 func (t *Decipher) Write(p []byte)(n int,err error){
+  if t.cipher.end {
+    return 0,errors.New("cannot use this, you must be create new 'object' decipher")
+  }
   t.cipher.start=true
   if len(p)==0 {
     return 0,nil
@@ -61,32 +63,15 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   return n,nil
 }
 
-func (t *Decipher) end()error{
-  t.cipher.hash.Reset()
-  err:=initHash(t.cipher.key,&t.cipher.hash)  
-  if err!= nil {
-    return err
-  }
-  t.cipher.p=initP
-  t.temp=[]byte{}
-  keyGen,err:=newKeyGenerator(t.cipher.key,t.cipher.nonce)
-  if err!=nil {
-    return err
-  }
-  t.cipher.keyGen=keyGen
-  return nil
-}
+
 
 func (t *Decipher) End()(n int,err error){
   if !t.cipher.start{
     return 0,nil
   }
+  t.cipher.end=true
 
   if len(t.temp)<32{
-    err:=t.end()
-    if err!=nil {
-      return 0,err
-    }
     return 0,errors.New("authentication failed, missing bytes?")
   }
   hashResult:=t.cipher.hash.Sum(nil)
@@ -96,10 +81,6 @@ func (t *Decipher) End()(n int,err error){
       match++
     }
   }
-  err=t.end()
-  if err!=nil {
-    return 0,err
-  }
   if match!=len(hashResult) {
     return 0,errors.New("authentication failed")
   }
@@ -107,6 +88,9 @@ func (t *Decipher) End()(n int,err error){
 }
 
 func (t *Cipher) Write(p []byte)(n int,err error){
+  if t.end {
+    return 0,errors.New("cannot use this. you must be create new 'object' cipher")
+  }
   t.start=true
   if len(p)==0 {
     return 0,nil
@@ -133,24 +117,12 @@ func (t *Cipher) Write(p []byte)(n int,err error){
 func (t *Cipher) End()(n int, err error){
   if !t.start {
     return 0,nil
-  }
-  
+  }  
   n,err=t.Write(t.hash.Sum(nil))
+  t.end=true
   if err!= nil {
     return n,err
   }
-  t.hash.Reset()
-  err=initHash(t.key,&t.hash)
-  if err!=nil {
-    return n,err
-  }
-  keyGen,err:=newKeyGenerator(t.key,t.nonce)
-
-  if err!=nil {
-    return n,err
-  }
-  t.keyGen=keyGen
-  t.p=initP
   return n,nil
 }
 
@@ -169,8 +141,8 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
     keyGen: keyGen,
     hash: h,
     writer: w,
-    key:append([]byte{},key...),
-    nonce:append([]byte{},nonce...),
+    start: false,
+    end: false,
   },nil
 }
 
