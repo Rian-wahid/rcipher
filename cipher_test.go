@@ -54,7 +54,7 @@ func TestDecipher(t *testing.T){
 }
 
 func TestDifferent1BitInKey(t *testing.T){
-  msg,key,nonce:=make([]byte,2),make([]byte,32),make([]byte,16)
+  msg,key,nonce:=make([]byte,10),make([]byte,32),make([]byte,16)
   rand.Read(msg)
   rand.Read(key)
   rand.Read(nonce)
@@ -73,9 +73,14 @@ func TestDifferent1BitInKey(t *testing.T){
   n2,err:=cipher2.Write(msg)
   assert.Nil(t,err)
   assert.Equal(t,n1,n2)
+  result1:=buf1.Next(n1)
+  result2:=buf2.Next(n2)
+  fmt.Printf("INFO message %x\n",msg)
+  fmt.Printf("INFO result1 %x\n",result1)
+  fmt.Printf("INFO result2 %x\n",result2)
   assert.NotEqual(t,
-    hex.EncodeToString(buf1.Next(n1)),
-    hex.EncodeToString(buf2.Next(n2)),
+    hex.EncodeToString(result1),
+    hex.EncodeToString(result2),
     )
   cipher1.End()
   cipher2.End()
