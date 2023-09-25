@@ -1,12 +1,13 @@
 package rcipher
 
 import (
-  "testing"
-  "github.com/stretchr/testify/assert"
-  "fmt"
-  "crypto/rand"
-  "bytes"
-  "encoding/hex"
+	"bytes"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCipherUniqueXORKey(t *testing.T){
@@ -80,6 +81,14 @@ func TestDifferent1BitInKey(t *testing.T){
   fmt.Printf("INFO result2 %x\n",result2)
   assert.NotEqual(t,
     hex.EncodeToString(result1),
+    hex.EncodeToString(result2),
+    )
+  assert.NotEqual(t,
+    hex.EncodeToString(msg),
+    hex.EncodeToString(result1),
+    )
+  assert.NotEqual(t,
+    hex.EncodeToString(msg),
     hex.EncodeToString(result2),
     )
   cipher1.End()
