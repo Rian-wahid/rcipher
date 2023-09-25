@@ -19,14 +19,13 @@ func (t *keyGenerator) getKey(p byte)byte{
   t.counter++
   t.keys=t.keys.next
 
-  a:=key.value^p
-  b:=t.keys.value^sbox[a^t.counter]
-  c:=t.keys.next.value^sbox[b]
-  d:=t.keys.next.next.value^sbox[c]
+  a:=mix2byte(key.value,p)
+  b:=mix2byte(t.keys.value,t.counter)
+  c:=mix3byte(t.keys.next.value,a,b)
+  d:=mix3byte(t.keys.next.next.value,b,c)
 
-
-  key.value=sbox[(key.value>>4)|(c<<4)]
-  t.keys.value=sbox[(t.keys.value>>4)|(d<<4)]
+  key.value=mix2byte(key.value,c)
+  t.keys.value=mix2byte(t.keys.value,d)
   
   a+=b
   d^=a
@@ -35,13 +34,11 @@ func (t *keyGenerator) getKey(p byte)byte{
   b^=c
   b=bits.RotateLeft8(b,3)
 
-  t.keys.next.value=sbox[(c>>4)|(d<<4)]
-  t.keys.next.next.value=sbox[(d>>4)|(c<<4)]
+  t.keys.next.value=mix2byte(t.keys.next.value,c)
+  t.keys.next.next.value=mix2byte(t.keys.next.next.value,d)
   t.keys=t.keys.next.next.next
-  a=sbox[a^c]
-  b=sbox[b^d]
- 
-  return nsbox[a^b]
+   
+  return nsbox[mix4byte(a,b,c,d)]
 }
 
 
@@ -61,7 +58,7 @@ func newKeyGenerator(key,nonce []byte)(*keyGenerator,error){
   // mix the keys
   p:=initP
   for i:=0; i<2*keysSize; i++{
-    p^=sbox[keyGen.getKey(p)^sbox[key[i%32]^nonce[i%16]]]
+    p=mix4byte(p,keyGen.getKey(p),key[i%32],nonce[i%16])
   }
   keyGen.counter=1
   return keyGen,nil
@@ -74,15 +71,15 @@ func genKeys(key, nonce []byte) *ringInt8{
   kn:=append(key,nonce...)
   kk:=uint8(255)
   
-  for i:= range key{
-    kk^=sbox[kn[i]]^bits.RotateLeft8(kk,4)
+  for i:= range kn{
+    kk=mix2byte(kk,kn[i])
   }
   
   for i:=0; i<keysSize; i++{
     k:=kn[i%48]
-    kk^=sbox[k+uint8(i)]
-    kn[i%48]^=sbox[kk]
-    keys.value=kk^k^bits.RotateLeft8(k,4)
+    kk=mix3byte(kk,k,uint8(i))
+    kn[i%48]=mix2byte(kn[i%48],kk)
+    keys.value=kk
     keys=keys.next
   } 
   return keys

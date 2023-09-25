@@ -86,18 +86,22 @@ func TestDifferent1BitInKey(t *testing.T){
   cipher2.End()
 }
 
-/*func TestIrreversibleLogic(t *testing.T){
-  i:=0
-  for a:=0; a<256; a++{
-    for b:=0; b<256; b++{
-      n:=(sbox[a]>>3)|(sbox[b]<<3)
-      n=sbox[n]
-      n+=1
-      if n!=byte(a)&&n!=byte(b) && sbox[n]!=byte(a) &&sbox[n]!=byte(b) && n^byte(a)!=byte(b) && sbox[n] ^byte(b)!=byte(a) && sbox[a]^n!=byte(b) && sbox[b]^n!=byte(a) && sbox[b]!=n && sbox[a]!=n{
-        fmt.Println(n,a,b)
-        i++
-      }
-    }
-  }
-  fmt.Println(i)
-}*/
+func TestEnd(t *testing.T){
+  key,nonce:=make([]byte,32),make([]byte,16)
+  var buf1 bytes.Buffer
+  var buf2 bytes.Buffer
+  c,err:=NewCipher(key,nonce,&buf1)
+  assert.Nil(t,err)
+  d,err:=NewDecipher(key,nonce,&buf2)
+  assert.Nil(t,err)
+  c.Write([]byte("message"))
+  _,err=c.End()
+  assert.Nil(t,err)
+  _,err=c.Write([]byte("m"))
+  assert.NotNil(t,err)
+  d.Write(buf1.Bytes())
+  _,err=d.End()
+  assert.Nil(t,err)
+  _,err=d.Write([]byte("m"))
+  assert.NotNil(t,err)
+}

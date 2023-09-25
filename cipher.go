@@ -40,14 +40,14 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   if len(p)==0 {
     return 0,nil
   }
+  n=0
   for i:= range p {
     xk:=(*t.cipher.keyGen).getKey(t.cipher.p)
     d:=p[i]^xk
-    t.cipher.p=sbox[(sbox[xk]>>3)|(sbox[d]<<3)]
+    t.cipher.p=mix2byte(sbox[xk],sbox[d])
     t.temp=append(t.temp, d)
   }
   tmpLen:=len(t.temp)
-  n=0
   if tmpLen>32 {
     bb:=t.temp[:tmpLen-32]
     _,err:=t.cipher.hash.Write(bb)
@@ -103,7 +103,7 @@ func (t *Cipher) Write(p []byte)(n int,err error){
   for i:= range p {
     xk:=t.keyGen.getKey(t.p)
     e:=p[i]^xk
-    t.p=sbox[(sbox[xk]>>3)|(sbox[p[i]]<<3)]
+    t.p=mix2byte(sbox[xk],sbox[p[i]])
     result[i]=e
   }
   n,err=t.writer.Write(result)
@@ -136,6 +136,7 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
   if err!=nil {
     return nil,err
   }
+  
   return &Cipher{
     p:initP,
     keyGen: keyGen,
