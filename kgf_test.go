@@ -16,13 +16,11 @@ func kgfTestHelperUniqueKey(t *testing.T,round,size int){
   rand.Read(nonce)
   keyGen,err:=newKeyGenerator(key,nonce)
   assert.Nil(t,err)
-  p:=byte(255)
   uniqueKey:=make(map[string]bool)
   for i:=0; i<round; i++{
     k:=make([]byte,size)
     for j:= range k{
-      k[j]=keyGen.getKey(p)
-      p=k[j]
+      k[j]=keyGen.getKey()
     }
     uniqueKey[string(k)]=true
   }

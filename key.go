@@ -2,45 +2,51 @@ package rcipher
 
 import (
   "errors"
-  "math/bits"
 )
 
 type keyGenerator struct{
   keys *ringInt8
-  counter uint8
+  counter1 uint8
+  counter2 uint8
+  tmpKey []byte
 }
 
-var initP = byte(255)
 
-var keysSize = 128
-
-func (t *keyGenerator) getKey(p byte)byte{
-  key:=t.keys
-  t.counter++
-  t.keys=t.keys.next
-
-  a:=mix2byte(key.value,p)
-  b:=mix2byte(t.keys.value,t.counter)
-  c:=mix3byte(t.keys.next.value,a,b)
-  d:=mix3byte(t.keys.next.next.value,b,c)
-
-  key.value=mix2byte(key.value,c)
-  t.keys.value=mix2byte(t.keys.value,d)
-  
-  a+=b
-  d^=a
-  d=bits.RotateLeft8(d,4)
-  c+=d
-  b^=c
-  b=bits.RotateLeft8(b,3)
-
-  t.keys.next.value=mix2byte(t.keys.next.value,c)
-  t.keys.next.next.value=mix2byte(t.keys.next.next.value,d)
-  t.keys=t.keys.next.next.next
-   
-  return nsbox[mix4byte(a,b,c,d)]
+var keysSize = 127
+func (t *keyGenerator) getKey()byte{
+  t.counter1++
+  if len(t.tmpKey)!=0 {
+    r:=nsbox[t.tmpKey[0]]
+    if len(t.tmpKey)==1 {
+      t.tmpKey=[]byte{}
+      return r
+    }
+    t.tmpKey=t.tmpKey[1:]
+    return r
+  }
+  t.counter2++
+  k:=make([]byte,5)
+  k1:=t.keys
+  k2:=k1.next
+  k3:=k2.next
+  k4:=k3.next
+  k5:=k4.next
+  a:=mix2byte(k1.value,t.counter1)
+  b:=mix2byte(k2.value,t.counter2)
+  c:=mix2byte(k3.value,a)
+  d:=mix2byte(k4.value,b)
+  e:=mix2byte(k5.value,c)
+  k[0],k[1],k[2],k[3],k[4]=a,b,c,d,e
+  n:=mix2byte(a,mix4byte(b,c,d,e))
+  k1.value=mix2byte(n,a)
+  k2.value=mix2byte(b,n)
+  k3.value=mix2byte(n,c)
+  k4.value=mix2byte(d,n)
+  k5.value=mix2byte(n,e)
+  t.keys=k5.next
+  t.tmpKey=k[1:]
+  return nsbox[k[0]]
 }
-
 
 
 func newKeyGenerator(key,nonce []byte)(*keyGenerator,error){
@@ -53,14 +59,14 @@ func newKeyGenerator(key,nonce []byte)(*keyGenerator,error){
   keys:=genKeys(key,nonce)
   keyGen:=&keyGenerator{
     keys:keys,
-    counter:1,
+    counter1:1,
+    counter2:1,
+    tmpKey:[]byte{},
   }
-  // mix the keys
-  p:=initP
-  for i:=0; i<2*keysSize; i++{
-    p=mix4byte(p,keyGen.getKey(p),key[i%32],nonce[i%16])
+  //mix key
+  for i:=0; i<keysSize; i++{
+    keyGen.getKey()
   }
-  keyGen.counter=1
   return keyGen,nil
 }
 

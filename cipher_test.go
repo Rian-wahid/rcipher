@@ -18,13 +18,14 @@ func TestCipherUniqueXORKey(t *testing.T){
   cipher,err:=NewCipher(key,nonce,&buf)
   assert.Nil(t,err)
   uniqueXorKey:=make(map[string]bool)
-  size:=4
-  round:=100000
+  size:=2
+  round:=65000
   for i:=0; i<round; i++{
     b:=make([]byte,size)
     n,err:=cipher.Write(b)
     assert.Nil(t,err)
     enc:=buf.Next(n)
+    //fmt.Println(hex.EncodeToString(enc))
     assert.NotEqual(t,hex.EncodeToString(b),hex.EncodeToString(enc))
     uniqueXorKey[string(enc)]=true
   }

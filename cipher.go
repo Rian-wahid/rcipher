@@ -11,7 +11,6 @@ type Cipher struct {
   hash hash.Hash
   keyGen *keyGenerator
   writer io.Writer
-  p byte
   start bool
   end bool
 }
@@ -42,9 +41,8 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   }
   n=0
   for i:= range p {
-    xk:=(*t.cipher.keyGen).getKey(t.cipher.p)
+    xk:=(*t.cipher.keyGen).getKey()
     d:=p[i]^xk
-    t.cipher.p=mix2byte(sbox[xk],sbox[d])
     t.temp=append(t.temp, d)
   }
   tmpLen:=len(t.temp)
@@ -101,9 +99,8 @@ func (t *Cipher) Write(p []byte)(n int,err error){
   }
   result:=make([]byte,len(p))
   for i:= range p {
-    xk:=t.keyGen.getKey(t.p)
+    xk:=t.keyGen.getKey()
     e:=p[i]^xk
-    t.p=mix2byte(sbox[xk],sbox[p[i]])
     result[i]=e
   }
   n,err=t.writer.Write(result)
@@ -138,7 +135,6 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
   }
   
   return &Cipher{
-    p:initP,
     keyGen: keyGen,
     hash: h,
     writer: w,
