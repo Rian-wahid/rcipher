@@ -2,9 +2,9 @@ module github.com/Rian-wahid/rcipher
 
 go 1.20
 
-exclude github.com/Rian-wahid/rcipher/example v0.2.0
+exclude github.com/Rian-wahid/rcipher/example v0.2.1
 
-exclude github.com.Rian-wahid/rcipher/benchmark v0.2.0
+exclude github.com.Rian-wahid/rcipher/benchmark v0.2.1
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

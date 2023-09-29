@@ -2,4 +2,4 @@ module benchmark
 
 go 1.20
 
-require github.com/Rian-wahid/rcipher v0.2.0
+require github.com/Rian-wahid/rcipher v0.2.1
