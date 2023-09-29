@@ -18,8 +18,8 @@ func TestCipherUniqueXORKey(t *testing.T){
   cipher,err:=NewCipher(key,nonce,&buf)
   assert.Nil(t,err)
   uniqueXorKey:=make(map[string]bool)
-  size:=2
-  round:=65000
+  size:=4
+  round:=1000000
   for i:=0; i<round; i++{
     b:=make([]byte,size)
     n,err:=cipher.Write(b)
@@ -56,7 +56,7 @@ func TestDecipher(t *testing.T){
 }
 
 func TestDifferent1BitInKey(t *testing.T){
-  msg,key,nonce:=make([]byte,5),make([]byte,32),make([]byte,16)
+  msg,key,nonce:=make([]byte,16),make([]byte,32),make([]byte,16)
   rand.Read(msg)
   rand.Read(key)
   rand.Read(nonce)

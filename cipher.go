@@ -5,6 +5,7 @@ import (
   "hash"
   "io"
   "errors"
+  "sync"
 )
 
 type Cipher struct {
@@ -47,12 +48,15 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   }
   tmpLen:=len(t.temp)
   if tmpLen>32 {
+    var wg sync.WaitGroup
+    wg.Add(1)
     bb:=t.temp[:tmpLen-32]
-    _,err:=t.cipher.hash.Write(bb)
-    if err!=nil {
-      return 0,err
-    }
-    n,err=t.cipher.writer.Write(bb)
+    go func(){
+      t.cipher.hash.Write(bb)
+      wg.Done()
+    }()
+    n,err:=t.cipher.writer.Write(bb)
+    wg.Wait()
     if err!=nil{
       return n,err
     }
@@ -93,10 +97,12 @@ func (t *Cipher) Write(p []byte)(n int,err error){
   if len(p)==0 {
     return 0,nil
   }
-  _,err=t.hash.Write(p)
-  if err!=nil {
-    return 0,err
-  }
+  var wg sync.WaitGroup
+  wg.Add(1)
+  go func ()  {
+    t.hash.Write(p)
+    wg.Done()
+  }()
   result:=make([]byte,len(p))
   for i:= range p {
     xk:=t.keyGen.getKey()
@@ -104,7 +110,7 @@ func (t *Cipher) Write(p []byte)(n int,err error){
     result[i]=e
   }
   n,err=t.writer.Write(result)
-  
+  wg.Wait()
   if err!=nil {
     return n,err
   }
@@ -129,10 +135,11 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
     return nil,err
   }
   h:=sha256.New()
-  err=initHash(key,&h)
-  if err!=nil {
-    return nil,err
-  }
+  
+  h.Write(key)
+  in:=h.Sum(nil)
+  h.Reset()
+  h.Write(in)
   
   return &Cipher{
     keyGen: keyGen,
@@ -143,16 +150,3 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
   },nil
 }
 
-func initHash(key []byte,h *hash.Hash)error{
-  _,err:=(*h).Write(key)
-  if err!=nil {
-    return err
-  }
-  (*h).Reset()
-  in:=(*h).Sum(nil)
-  _,err=(*h).Write(in)
-  if err!=nil {
-    return err
-  }
-  return nil
-}

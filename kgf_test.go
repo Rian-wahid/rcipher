@@ -36,7 +36,7 @@ func TestKeyGenerator(t *testing.T){
   _,err=newKeyGenerator(key,nonce)
   assert.NotNil(t,err)
   wg.Add(10)
-  go kgfTestHelperUniqueKey(t,256,2)
+  go kgfTestHelperUniqueKey(t,255,1)
   go kgfTestHelperUniqueKey(t,1000,2)
   go kgfTestHelperUniqueKey(t,10000,2)
   go kgfTestHelperUniqueKey(t,50000,2)

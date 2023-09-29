@@ -19,8 +19,8 @@ func main(){
   }
   totalTime:=int64(0)
 
-  l:=int64(1000000)
-  b:=make([]byte,32)
+  l:=int64(1200000)
+  b:=make([]byte,144)
   for i:=int64(0); i<l; i++ {
     st:=time.Now().UnixMilli()
     _,err:=cipher.Write(b)
