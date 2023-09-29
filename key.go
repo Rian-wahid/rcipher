@@ -3,6 +3,7 @@ package rcipher
 import (
   "errors"
   "crypto/sha512"
+  "sync"
 )
 
 type keyGenerator struct{
@@ -36,24 +37,33 @@ func (t *keyGenerator) getKey()byte{
   n2:=mix4byte(k5.value,k6.value,k7.value,k8.value)
   x:=nsbox[n^n2]
   x2:=nsbox[x^n2]
+  var wg sync.WaitGroup
+  wg.Add(2)
   k[0]=nsbox[k1.value-x]
   k[1]=nsbox[k2.value-x2] 
   k[2]=nsbox[k3.value-x]
   k[3]=nsbox[k4.value-x2]
+  go func(){
+    k1.value=mix2byte(n,k1.value)
+    k2.value=mix2byte(n2,k2.value)
+    k3.value=mix2byte(n,k3.value)
+    k4.value=mix2byte(n2,k4.value)
+    wg.Done()
+  }()
   k[4]=nsbox[k5.value-x]
   k[5]=nsbox[k6.value-x2]
   k[6]=nsbox[k7.value-x]
   k[7]=nsbox[k8.value-x2]
-  k1.value=mix2byte(n,k1.value)
-  k2.value=mix2byte(n2,k2.value)
-  k3.value=mix2byte(n,k3.value)
-  k4.value=mix2byte(n2,k4.value)
-  k5.value=mix2byte(n,k5.value)
-  k6.value=mix2byte(n2,k6.value)
-  k7.value=mix2byte(n,k7.value)
-  k8.value=mix2byte(n2,k8.value)
+  go func(){
+    k5.value=mix2byte(n,k5.value)
+    k6.value=mix2byte(n2,k6.value)
+    k7.value=mix2byte(n,k7.value)
+    k8.value=mix2byte(n2,k8.value)
+    wg.Done()
+  }()
   t.keys=k5
   t.tmpKey=k[1:]
+  wg.Wait()
   return k[0]
 }
 
