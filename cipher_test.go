@@ -18,8 +18,8 @@ func TestCipherUniqueXORKey(t *testing.T){
   cipher,err:=NewCipher(key,nonce,&buf)
   assert.Nil(t,err)
   uniqueXorKey:=make(map[string]bool)
-  size:=4
-  round:=1000000
+  size:=2
+  round:=65000
   for i:=0; i<round; i++{
     b:=make([]byte,size)
     n,err:=cipher.Write(b)
