@@ -5,7 +5,6 @@ import (
   "hash"
   "io"
   "errors"
-  "sync"
 )
 
 type Cipher struct {
@@ -48,15 +47,9 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   }
   tmpLen:=len(t.temp)
   if tmpLen>32 {
-    var wg sync.WaitGroup
-    wg.Add(1)
     bb:=t.temp[:tmpLen-32]
-    go func(){
-      t.cipher.hash.Write(bb)
-      wg.Done()
-    }()
+    t.cipher.hash.Write(bb)
     n,err:=t.cipher.writer.Write(bb)
-    wg.Wait()
     if err!=nil{
       return n,err
     }
@@ -97,12 +90,7 @@ func (t *Cipher) Write(p []byte)(n int,err error){
   if len(p)==0 {
     return 0,nil
   }
-  var wg sync.WaitGroup
-  wg.Add(1)
-  go func ()  {
-    t.hash.Write(p)
-    wg.Done()
-  }()
+  t.hash.Write(p)
   result:=make([]byte,len(p))
   for i:= range p {
     xk:=t.keyGen.getKey()
@@ -110,7 +98,6 @@ func (t *Cipher) Write(p []byte)(n int,err error){
     result[i]=e
   }
   n,err=t.writer.Write(result)
-  wg.Wait()
   if err!=nil {
     return n,err
   }
