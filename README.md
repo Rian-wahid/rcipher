@@ -15,7 +15,7 @@ go get github.com/Rian-wahid/rcipher
 ```
 
 
-#### Usage
+#### Example
 
 ```go
 package main
