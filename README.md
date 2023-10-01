@@ -70,5 +70,5 @@ this is not thread safe.
 I cannot guarantee the security (how safe this cipher). but like other stream ciphers if the same nonce is used to encrypt more than once with the same key, it is dangerous.
 By default this has a simple authentication mechanism with a sha256 hash so the ciphertext length is equal to the plaintext length plus 32 bytes.
 This uses a combination of key and nonce which is hashed and then used to create a key stream.
-Previously it used AES S-Box and some steps from chacha (before the LICENSE file was added), but now it uses neither.
+Previously it used AES S-Box and some steps from chacha (before the LICENSE file was added).
 
