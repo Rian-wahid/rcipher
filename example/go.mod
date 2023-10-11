@@ -2,5 +2,5 @@ module example
 
 go 1.20
 
-require github.com/Rian-wahid/rcipher v0.3.0
+require github.com/Rian-wahid/rcipher v1.0.0
 
