@@ -34,7 +34,6 @@ func (t *keyGenerator) getKey()byte{
   k:=make([]byte,16)
   key:=t.keys
   k0v:=key.value
-  nextKey:=key.next.next.next
   for i:=0; i<16; i+=4{
     var a uint32
     if i+4<16 {
@@ -50,7 +49,7 @@ func (t *keyGenerator) getKey()byte{
     key.value=key.value-bits.RotateLeft32(a^b,24)
     key=key.next
   }
-  t.keys=nextKey
+  t.keys=key
   t.tmpKey=k[1:]
   return k[0]
 }
