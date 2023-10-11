@@ -2,13 +2,14 @@ package rcipher
 
 import (
   "crypto/sha256"
+  "crypto/hmac"
   "hash"
   "io"
   "errors"
 )
 
 type Cipher struct {
-  hash hash.Hash
+  hmac hash.Hash
   keyGen *keyGenerator
   writer io.Writer
   start bool
@@ -48,7 +49,7 @@ func (t *Decipher) Write(p []byte)(n int,err error){
   tmpLen:=len(t.temp)
   if tmpLen>32 {
     bb:=t.temp[:tmpLen-32]
-    t.cipher.hash.Write(bb)
+    t.cipher.hmac.Write(bb)
     n,err:=t.cipher.writer.Write(bb)
     if err!=nil{
       return n,err
@@ -69,14 +70,9 @@ func (t *Decipher) End()(n int,err error){
   if len(t.temp)<32{
     return 0,errors.New("authentication failed, missing bytes?")
   }
-  hashResult:=t.cipher.hash.Sum(nil)
-  match:=0
-  for i:=range hashResult{
-    if hashResult[i]==t.temp[i] {
-      match++
-    }
-  }
-  if match!=len(hashResult) {
+
+  match:=hmac.Equal(t.temp,t.cipher.hmac.Sum(nil))
+  if !match {
     return 0,errors.New("authentication failed")
   }
   return 0,nil
@@ -90,7 +86,7 @@ func (t *Cipher) Write(p []byte)(n int,err error){
   if len(p)==0 {
     return 0,nil
   }
-  t.hash.Write(p)
+  t.hmac.Write(p)
   result:=make([]byte,len(p))
   for i:= range p {
     xk:=t.keyGen.getKey()
@@ -108,7 +104,7 @@ func (t *Cipher) End()(n int, err error){
   if !t.start {
     return 0,nil
   }  
-  n,err=t.Write(t.hash.Sum(nil))
+  n,err=t.Write(t.hmac.Sum(nil))
   t.end=true
   if err!= nil {
     return n,err
@@ -121,16 +117,14 @@ func NewCipher(key,nonce []byte, w io.Writer)(*Cipher,error){
   if err!=nil{
     return nil,err
   }
+  
   h:=sha256.New()
   
   h.Write(key)
   in:=h.Sum(nil)
-  h.Reset()
-  h.Write(in)
-  
   return &Cipher{
     keyGen: keyGen,
-    hash: h,
+    hmac: hmac.New(sha256.New,in),
     writer: w,
     start: false,
     end: false,
