@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-func kgfTestHelperUniqueKey(t *testing.T,round,size int){
+func ksgTestHelperUniqueKey(t *testing.T,round,size int){
   key,nonce:=make([]byte,32),make([]byte,16)
   rand.Read(key)
   rand.Read(nonce)
@@ -36,17 +36,17 @@ func TestKeyGenerator(t *testing.T){
   _,err=newKeyGenerator(key,nonce)
   assert.NotNil(t,err)
   wg.Add(10)
-  go kgfTestHelperUniqueKey(t,256,2)
-  go kgfTestHelperUniqueKey(t,1000,2)
-  go kgfTestHelperUniqueKey(t,10000,2)
-  go kgfTestHelperUniqueKey(t,50000,2)
+  go ksgTestHelperUniqueKey(t,256,2)
+  go ksgTestHelperUniqueKey(t,1000,2)
+  go ksgTestHelperUniqueKey(t,10000,2)
+  go ksgTestHelperUniqueKey(t,50000,2)
 
-  go kgfTestHelperUniqueKey(t,50000,3)
-  go kgfTestHelperUniqueKey(t,100000,3)
-  go kgfTestHelperUniqueKey(t,500000,4)
-  go kgfTestHelperUniqueKey(t,750000,5)
+  go ksgTestHelperUniqueKey(t,50000,3)
+  go ksgTestHelperUniqueKey(t,100000,3)
+  go ksgTestHelperUniqueKey(t,500000,4)
+  go ksgTestHelperUniqueKey(t,750000,5)
 
-  go kgfTestHelperUniqueKey(t,2000000,6)
-  go kgfTestHelperUniqueKey(t,4000000,8)
+  go ksgTestHelperUniqueKey(t,2000000,6)
+  go ksgTestHelperUniqueKey(t,4000000,8)
   wg.Wait()
 }
