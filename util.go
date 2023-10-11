@@ -1,18 +1,18 @@
 package rcipher
 
-type ringInt8 struct{
-  next *ringInt8
-  value uint8
+type ringUint32 struct{
+  next *ringUint32
+  value uint32
 }
-func newRingInt8(size int)*ringInt8{
+func newRingUint32(size int)*ringUint32{
   if size<=0 {
     return nil
   }
-  initial:=&ringInt8{}
+  initial:=&ringUint32{}
   initial.next=initial
   prev:=initial
   for i:=1; i<size; i++{
-    r:=&ringInt8{}
+    r:=&ringUint32{}
     prev.next=r
     prev=r
   }

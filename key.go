@@ -3,15 +3,23 @@ package rcipher
 import (
   "errors"
   "crypto/sha512"
+  "encoding/binary"
+  "math/bits"
 )
 
 type keyGenerator struct{
-  keys *ringInt8
+  keys *ringUint32
   tmpKey []byte
 }
 
+func zeroByteHelper(b byte)byte{
+  r:=b+1
+  if r<b{
+    r=b-1
+  }
+  return r
+}
 
-var keysSize = 127
 func (t *keyGenerator) getKey()byte{
   if len(t.tmpKey)!=0 {
     r:=t.tmpKey[0]
@@ -23,25 +31,24 @@ func (t *keyGenerator) getKey()byte{
     return r
   }
 
-  k:=make([]byte,8)
+  k:=make([]byte,16)
   key:=t.keys
   k0v:=key.value
-  nextKey:=key.next.next.next.next
-  n:=byte(1)
-  for i:=0; i<8; i++{
-    by:=n
-    if i+1<8 {
-      by=key.next.value-by
+  nextKey:=key.next.next.next
+  for i:=0; i<16; i+=4{
+    var a uint32
+    if i+4<16 {
+      a=key.next.value
     }else{
-      by=k0v-by
+      a=k0v
     }
-    k[i]=(key.value^by)-((key.value>>4)|(key.value<<4))
-    if k[i]+1>k[i]{
-     k[i]+=1
-    }
-    key.value=key.value-((by>>4)|(by<<4))
+    b:=(key.value^a)-bits.RotateLeft32(key.value,8)
+    k[i]=zeroByteHelper(byte(b))
+    k[i+1]=zeroByteHelper(byte(b>>8))
+    k[i+2]=zeroByteHelper(byte(b>>16))
+    k[i+3]=zeroByteHelper(byte(b>>24))
+    key.value=key.value-bits.RotateLeft32(a^b,24)
     key=key.next
-    n++
   }
   t.keys=nextKey
   t.tmpKey=k[1:]
@@ -63,16 +70,17 @@ func newKeyGenerator(key,nonce []byte)(*keyGenerator,error){
   return keyGen,nil
 }
 
-func genKeys(key, nonce []byte) *ringInt8{
+func genKeys(key, nonce []byte) *ringUint32{
   h:=sha512.New()
   h.Write(append(key,nonce...))
   kn:=h.Sum(nil)
   h.Reset()
   h.Write(append(nonce,key...))
   kn=append(kn,h.Sum(nil)...)
-  keys:=newRingInt8(keysSize)  
-  for i:=0; i<keysSize; i++{
-    keys.value=kn[i]
+  keys:=newRingUint32(32)  
+  for i:=0; i<32; i++{
+    ind:=i*4
+    keys.value=binary.BigEndian.Uint32(kn[ind:ind+4])
     keys=keys.next
   } 
   return keys
