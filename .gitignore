@@ -1,3 +1,6 @@
 go.sum
-example/go.sum
-benchmark/go.sum
+example/
+benchmark/
+cipher_test.go
+ksg_test.go
+
